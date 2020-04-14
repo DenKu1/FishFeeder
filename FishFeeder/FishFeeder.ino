@@ -5,7 +5,6 @@
 // Настройки
 #define FEED_PERIOD 12    // Период кормёжки В ЧАСАХ
 #define PORTION_AMOUNT 2 // Количество порций корма за 1 раз
-#define INVERSE_BUTTON 1  // 0 - норм. открытая, 1 - норм. замкнутая кнопка
 #define FEEDER_POSITION 70  //  Позиция серво под кормушкой
 #define FISHTANK_POSITION 10  // Позиция серво над отверстием
 
@@ -44,15 +43,15 @@ void periodSetup()
     EEPROM.write(1000, 50);
     EEPROM.put(2, realPeriod);
   }
-
-  EEPROM.get(2, realPeriod);
+  
+  EEPROM.get(2, realPeriod); 
   sleedAmount = (float)FEED_PERIOD * 3600 / realPeriod * 1000;
 }
 
 void buttonSetup()
 {
   pinMode(BTN_PIN, INPUT_PULLUP);
-  attachInterrupt(0, isrHandler, INVERSE_BUTTON ? RISING : FALLING);
+  attachInterrupt(0, isrHandler, FALLING);
   delay(300);
   isrState = false;
 }
@@ -94,11 +93,23 @@ void sleep()
   for (int i = 0; i < sleedAmount; i++)
   {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-    if (isrState) break;
-  }  
+    if (isrState) 
+    {
+      delay(2000);
+      if (!digitalRead(BTN_PIN))
+      {  
+          break;
+      }
+      else
+      {
+        isrState = false;  
+      }
+    }      
+  }    
 }
 
-void isrHandler() {
+void isrHandler() 
+{
   if (!isrState) isrState = true;
 }
 
